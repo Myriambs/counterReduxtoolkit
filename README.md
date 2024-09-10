@@ -1,70 +1,142 @@
-# Getting Started with Create React App
+Pour expliquer Redux Toolkit à tes étudiants, tu peux leur présenter un exemple simple de compteur (counter) avec React et Redux Toolkit. Voici une approche pédagogique, accompagnée d'explications et de code.
+1. Qu'est-ce que Redux Toolkit ?
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Redux Toolkit est une bibliothèque qui simplifie l'utilisation de Redux dans les applications. Elle offre des outils pour :
 
-## Available Scripts
+    Créer des slices (petites parties de l'état de l'application)
+    Gérer facilement les actions et le state
+    Réduire le code boilerplate
 
-In the project directory, you can run:
+2. Étapes pour créer un counter avec Redux Toolkit
+2.1. Installation
 
-### `npm start`
+Demande-leur d’installer les dépendances nécessaires dans leur projet React :
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+bash
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+npm install @reduxjs/toolkit react-redux
 
-### `npm test`
+2.2. Configurer Redux avec un Slice
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Un slice est une partie de l'état global qui contient un "reducer" (une fonction qui modifie l'état) et des actions.
 
-### `npm run build`
+Dans le dossier src, crée un fichier counterSlice.js :
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+js
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+import { createSlice } from '@reduxjs/toolkit';
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+export const counterSlice = createSlice({
+  name: 'counter',   // Nom du slice
+  initialState: { value: 0 },   // État initial
+  reducers: {
+    increment: (state) => { state.value += 1; },
+    decrement: (state) => { state.value -= 1; },
+    reset: (state) => { state.value = 0; },
+  },
+});
 
-### `npm run eject`
+// Export des actions pour les utiliser dans le composant
+export const { increment, decrement, reset } = counterSlice.actions;
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+// Export du reducer pour l'ajouter au store
+export default counterSlice.reducer;
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2.3. Créer le Store Redux
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Ensuite, il faut créer un store Redux qui contient le state global de l'application.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Dans le fichier src/store.js :
 
-## Learn More
+js
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+import { configureStore } from '@reduxjs/toolkit';
+import counterReducer from './counterSlice';
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+export const store = configureStore({
+  reducer: {
+    counter: counterReducer,  // Ajout du slice dans le store
+  },
+});
 
-### Code Splitting
+2.4. Fournir le store à l’application
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Il faut ensuite connecter l’application au store. Ouvre le fichier src/index.js et utilise Provider de react-redux pour passer le store à toute l’application :
 
-### Analyzing the Bundle Size
+js
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
-### Making a Progressive Web App
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root')
+);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+2.5. Créer le composant Counter
 
-### Advanced Configuration
+Maintenant, crée un composant React qui interagit avec le store.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Dans le fichier src/Counter.js :
 
-### Deployment
+js
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { increment, decrement, reset } from './counterSlice';
 
-### `npm run build` fails to minify
+const Counter = () => {
+  const count = useSelector((state) => state.counter.value); // Sélectionne la valeur du compteur
+  const dispatch = useDispatch();
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+  return (
+    <div>
+      <h1>Counter: {count}</h1>
+      <button onClick={() => dispatch(increment())}>Increment</button>
+      <button onClick={() => dispatch(decrement())}>Decrement</button>
+      <button onClick={() => dispatch(reset())}>Reset</button>
+    </div>
+  );
+};
+
+export default Counter;
+
+2.6. Utiliser le Composant Counter
+
+Dans ton composant App.js, importe et affiche le composant Counter :
+
+js
+
+import React from 'react';
+import Counter from './Counter';
+
+function App() {
+  return (
+    <div className="App">
+      <Counter />
+    </div>
+  );
+}
+
+export default App;
+
+3. Explications pour tes étudiants
+
+    Redux Toolkit simplifie la gestion du state global de l’application en réduisant le code nécessaire à la création de reducers et d’actions.
+    createSlice permet de définir l'état initial et les actions (comme increment, decrement, reset).
+    useSelector permet de lire la valeur du state global dans un composant.
+    useDispatch permet de déclencher une action pour mettre à jour l'état global.
+
+4. Fonctionnement de l'exemple
+
+    Quand l’utilisateur clique sur "Increment", le state counter.value est augmenté de 1.
+    "Decrement" le diminue de 1.
+    "Reset" remet la valeur à zéro.
+
+Cet exemple simple permet à tes étudiants de comprendre les bases de Redux Toolkit avec React. Ils peuvent ensuite étendre cet exemple pour ajouter d’autres fonctionnalités comme la gestion asynchrone avec createAsyncThunk.
